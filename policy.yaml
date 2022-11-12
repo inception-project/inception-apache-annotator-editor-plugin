@@ -1,0 +1,30 @@
+name: Apache Annotator Editor Content Policies
+version: 0.1
+case_sensitive: false
+debug: true
+policies:
+  # TEI
+  - {
+      elements:
+        [
+          "head",
+          "body",
+          "div",
+          "tei",
+          "text",
+          "pb",
+          "l",
+          "lg",
+          "p",
+          "sp",
+          "speaker",
+          "note",
+          "stage",
+          "castList",
+          "castItem",
+          "role",
+          "roleDesc"
+        ],
+      action: "PASS",
+    }
+  - { attributes: ["class", "type"], action: "PASS" }

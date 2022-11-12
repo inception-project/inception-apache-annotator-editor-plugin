@@ -1,0 +1,10 @@
+{
+  "name": "Apache Annotator (external)",
+  "factory": "ApacheAnnotatorEditor.factory()",
+  "scripts": [ "dist/ApacheAnnotatorEditor.min.js" ],
+  "stylesheets": [ 
+    "dist/ApacheAnnotatorEditor.min.css", 
+    "dist/TEI.css" 
+  ],
+  "view": "iframe:cas+xhtml+xml"
+}

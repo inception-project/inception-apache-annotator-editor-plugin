@@ -1,0 +1,76 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+:root {
+  --iaa-focus-color: rgba(255,165,0);
+  --iaa-match-focus-color: rgb(0, 217, 255);
+}
+
+body {
+  line-height: 180%;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+/*  max-width: 700px;
+  margin: auto; */
+}
+
+.iaa-highlighted {
+  cursor: pointer;
+  border-bottom: 2px solid;
+  /*
+  transform-style: preserve-3d;
+  */
+}
+
+.iaa-related {
+  box-shadow: 0px -2px 0px 0px var(--iaa-focus-color) !important;
+}
+
+.iaa-marker-focus {
+  box-shadow: 0px 2px 0px 0px var(--iaa-focus-color) !important;
+}
+
+.iaa-marker-matchfocus {
+  box-shadow: 0px 2px 0px 0px var(--iaa-match-focus-color) !important;
+}
+
+.iaa-menu {
+  z-index: 100;
+  background-color: white;
+  color: black;
+  border: solid gray 1px;
+  border-radius: 4px;
+  font-family: sans-serif;
+  box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+}
+
+.iaa-menu .iaa-menu-item {
+  display: flex;
+  padding: 5px 15px;
+}
+
+.iaa-menu .iaa-menu-item:hover {
+  background-color: whitesmoke;
+}
+
+.iaa-menu-item .iaa-label {
+  width: 100%;
+}
+
+.iaa-menu-item .iaa-btn {
+  font-size: 80%;
+  padding-left: 15px;
+}
