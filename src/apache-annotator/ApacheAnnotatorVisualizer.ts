@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import './ApacheAnnotatorEditor.css'
+import './ApacheAnnotatorEditor.scss'
 import { CompactAnnotatedText, CompactTextMarker, CompactAnnotationMarker, CompactSpan, DiamAjax, DiamLoadAnnotationsOptions, VID, ViewportTracker, offsetToRange } from '@inception-project/inception-js-api'
 import { highlightText } from '@apache-annotator/dom'
 
@@ -32,7 +32,7 @@ export class ApacheAnnotatorVisualizer {
     this.ajax = ajax
     this.root = element
 
-    this.tracker = new ViewportTracker(this.root, (range : [number, number]) => this.loadAnnotations(range))
+    this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
   }
 
   private makeMarkerMap<T> (markerList: T[] | undefined): Map<VID, Array<T>> {
@@ -52,21 +52,17 @@ export class ApacheAnnotatorVisualizer {
     return markerMap
   }
 
-  public loadAnnotations (range? : [number, number]): void {
-    if (!range) {
-      range = [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]
-    }
-
+  public loadAnnotations (): void {
     const options: DiamLoadAnnotationsOptions = {
-      range,
+      range: this.tracker.currentRange,
       includeText: false
     }
 
     this.ajax.loadAnnotations(options)
-      .then((doc: CompactAnnotatedText) => this.renderDocument(doc))
+      .then((doc: CompactAnnotatedText) => this.renderAnnotations(doc))
   }
 
-  private renderDocument (doc: CompactAnnotatedText): void {
+  private renderAnnotations (doc: CompactAnnotatedText): void {
     const startTime = new Date().getTime()
     const viewportBegin = doc.window[0]
 
@@ -92,6 +88,13 @@ export class ApacheAnnotatorVisualizer {
       this.renderSelectedRelationEndpointHighlights(doc, selectedAnnotationVids)
     }
 
+    // Clean up empty highlights
+    this.root.querySelectorAll('.iaa-highlighted').forEach(e => {
+      if (!e.textContent) {
+        e.remove()
+      }
+    })
+
     const endTime = new Date().getTime()
 
     console.log(`Client-side rendering took ${Math.abs(endTime - startTime)}ms`)
@@ -114,7 +117,7 @@ export class ApacheAnnotatorVisualizer {
   }
 
   private findSpanAnnotationElements (vid: VID) : NodeListOf<Element> {
-    return this.root.querySelectorAll(`[data-iaa-id="${vid}"`)
+    return this.root.querySelectorAll(`[data-iaa-id="${vid}"]`)
   }
 
   renderTextMarker (marker: CompactTextMarker, viewportBegin: number) {

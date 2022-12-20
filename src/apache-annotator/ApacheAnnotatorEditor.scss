@@ -15,16 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-:root {
+@use "./InceptionEditorColors.scss";
+
+ :root {
   --iaa-focus-color: rgba(255,165,0);
   --iaa-match-focus-color: rgb(0, 217, 255);
 }
 
-body {
+html > body {
   line-height: 180%;
   font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 /*  max-width: 700px;
   margin: auto; */
+  margin: 0px;
 }
 
 .iaa-highlighted {
@@ -37,14 +40,20 @@ body {
 
 .iaa-related {
   box-shadow: 0px -2px 0px 0px var(--iaa-focus-color) !important;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .iaa-marker-focus {
   box-shadow: 0px 2px 0px 0px var(--iaa-focus-color) !important;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .iaa-marker-matchfocus {
   box-shadow: 0px 2px 0px 0px var(--iaa-match-focus-color) !important;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .iaa-menu {

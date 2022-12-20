@@ -60,6 +60,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
       return
     }
 
+    if (!sel.anchorNode || !sel.focusNode) return
+
     const anchorOffset = calculateStartOffset(this.root, sel.anchorNode) + sel.anchorOffset
     const focusOffset = calculateStartOffset(this.root, sel.focusNode) + sel.focusOffset
     sel.removeAllRanges()
