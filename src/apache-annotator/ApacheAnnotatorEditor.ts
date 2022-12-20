@@ -50,8 +50,6 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   }
 
   onMouseUp (event: Event): void {
-    console.log('Mouse up', event.target)
-
     const sel = window.getSelection()
     if (!sel) return
 
