@@ -28,20 +28,31 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
 
     const ajax = diam.createAjaxClient(props.diamAjaxCallbackUrl)
 
-    let targetElement: Element | null = null
+    let targetElement: Element | null = null
+
     if ((element as any).querySelector) {
       targetElement = (element as any).querySelector('[data-capture-root]')
     }
 
     if (!targetElement && element instanceof HTMLDocument) {
-      const bodies = element.getElementsByTagName('body')
-      if (bodies && bodies.length > 0) {
-        targetElement = bodies[0]
-      }
+      targetElement = element.body
     }
 
     if (!targetElement) {
       targetElement = element as Element
+    }
+
+    // If the target element is the body of a HTML document and the body has only one child, then
+    // we use the child as the target element. This is to support the case where the body is
+    // used as a container for the additional editor functionality.
+    const body = element.ownerDocument?.body
+    if (body && body === targetElement) {
+      if (body.childElementCount === 1) {
+        targetElement = body.firstChild as Element
+      } else {
+        console.warn('Body has more than one child element, using entire body as target element.' +
+          'This may cause problems when the editor injects additional UI elements into the body.')
+      }
     }
 
     element[PROP_EDITOR] = new ApacheAnnotatorEditor(targetElement, ajax)
