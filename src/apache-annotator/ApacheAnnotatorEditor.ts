@@ -28,16 +28,18 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   public constructor (element: Element, ajax: DiamAjax) {
     this.ajax = ajax
     this.root = element
-    this.vis = new ApacheAnnotatorVisualizer(element, ajax)
-    this.selector = new ApacheAnnotatorSelector(element, ajax)
 
-    element.addEventListener('mouseup', e => this.onMouseUp(e))
-    element.addEventListener('contextmenu', e => this.onRightClick(e))
+    this.vis = new ApacheAnnotatorVisualizer(this.root, this.ajax)
+    this.selector = new ApacheAnnotatorSelector(this.root, this.ajax)
+
+    // Event handlers for opening the context menu
+    this.root.addEventListener('mouseup', e => this.onMouseUp(e))
+    this.root.addEventListener('contextmenu', e => this.onRightClick(e))
 
     // Prevent right-click from triggering a selection event
-    element.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
-    element.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
-    element.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
+    this.root.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
+    this.root.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
+    this.root.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
   }
 
   private cancelRightClick (e: Event): void {

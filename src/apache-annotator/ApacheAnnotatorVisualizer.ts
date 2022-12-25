@@ -22,6 +22,8 @@ import { highlightText } from '@apache-annotator/dom'
 
 const CLASS_RELATED = 'iaa-related'
 
+const NO_LABEL = '◌'
+
 export class ApacheAnnotatorVisualizer {
   private ajax: DiamAjax
   private root: Element
@@ -31,11 +33,13 @@ export class ApacheAnnotatorVisualizer {
 
   private alpha = '55'
 
-  public constructor (element: Element, ajax: DiamAjax) {
+  constructor (element: Element, ajax: DiamAjax) {
     this.ajax = ajax
     this.root = element
 
     this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
+
+    // Add event handlers for highlighting extent of the annotation the mouse is currently over
     this.root.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
     this.root.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
   }
@@ -55,7 +59,7 @@ export class ApacheAnnotatorVisualizer {
     this.root.querySelectorAll('.iaa-hover').forEach(e => e.classList.remove('iaa-hover'))
   }
 
-  public loadAnnotations (): void {
+  loadAnnotations (): void {
     const options: DiamLoadAnnotationsOptions = {
       range: this.tracker.currentRange,
       includeText: false,
@@ -104,7 +108,7 @@ export class ApacheAnnotatorVisualizer {
 
   private renderInlineLabels () {
     // Find all the highlights that belong to the same annotation (VID)
-    const highlightsByVid = this.groupHighlightsByVid(this.getAllHighlights())
+    const highlightsByVid = groupHighlightsByVid(this.getAllHighlights())
 
     // Add special CSS classes to the first and last highlight of each annotation
     for (const highlights of highlightsByVid.values()) {
@@ -118,23 +122,6 @@ export class ApacheAnnotatorVisualizer {
 
   private getAllHighlights () {
     return this.root.querySelectorAll('.iaa-highlighted')
-  }
-
-  // eslint-disable-next-line no-undef
-  private groupHighlightsByVid (highlights: NodeListOf<Element>) {
-    const spansByVid = new Map<VID, Array<Element>>()
-    for (const highlight of highlights) {
-      const vid = highlight.getAttribute('data-iaa-id')
-      if (!vid) continue
-
-      let sectionGroup = spansByVid.get(vid)
-      if (!sectionGroup) {
-        sectionGroup = []
-        spansByVid.set(vid, sectionGroup)
-      }
-      sectionGroup.push(highlight)
-    }
-    return spansByVid
   }
 
   private renderSelectedRelationEndpointHighlights (doc: AnnotatedText) {
@@ -156,7 +143,7 @@ export class ApacheAnnotatorVisualizer {
     return this.root.querySelectorAll(`[data-iaa-id="${vid}"]`)
   }
 
-  renderTextMarker (doc: AnnotatedText, marker: TextMarker) {
+  private renderTextMarker (doc: AnnotatedText, marker: TextMarker) {
     const range = offsetToRange(this.root, marker.offsets[0][0] + doc.window[0], marker.offsets[0][1] + doc.window[0])
 
     if (!range) {
@@ -171,7 +158,7 @@ export class ApacheAnnotatorVisualizer {
     this.toCleanUp.add(highlightText(range, 'mark', attributes))
   }
 
-  renderSpanAnnotation (doc: AnnotatedText, span: Span) {
+  private renderSpanAnnotation (doc: AnnotatedText, span: Span) {
     const range = offsetToRange(this.root, span.offsets[0][0] + doc.window[0], span.offsets[0][1] + doc.window[0])
     if (!range) {
       console.debug('Could not render span annotation: ' + span)
@@ -189,7 +176,7 @@ export class ApacheAnnotatorVisualizer {
 
     const attributes = {
       'data-iaa-id': `${span.vid}`,
-      'data-iaa-label': `${span.label || '◌'}`,
+      'data-iaa-label': `${span.label || NO_LABEL}`,
       class: classList.join(' '),
       style: styleList.join('; ')
     }
@@ -229,20 +216,57 @@ export class ApacheAnnotatorVisualizer {
   }
 }
 
-export function closestHighlight (target: any): HTMLElement | null {
+/**
+ * Groups highlights by their VID.
+ *
+ * @param highlights list of highlights.
+ * @returns groups of highlights by VID.
+ */
+// eslint-disable-next-line no-undef
+export function groupHighlightsByVid (highlights: NodeListOf<Element>) {
+  const spansByVid = new Map<VID, Array<Element>>()
+  for (const highlight of highlights) {
+    const vid = highlight.getAttribute('data-iaa-id')
+    if (!vid) continue
+
+    let sectionGroup = spansByVid.get(vid)
+    if (!sectionGroup) {
+      sectionGroup = []
+      spansByVid.set(vid, sectionGroup)
+    }
+    sectionGroup.push(highlight)
+  }
+  return spansByVid
+}
+
+/**
+ * Utility function to find the closest highlight element to the given target.
+ *
+ * @param target a DOM node.
+ * @returns the closest highlight element or null if none is found.
+ */
+export function closestHighlight (target: Node | null): HTMLElement | null {
   if (!(target instanceof Node)) {
     return null
   }
 
   if (target instanceof Text) {
-    target = (target as Text).parentElement
+    const parent = target.parentElement
+    if (!parent) return null
+    target = parent
   }
 
   const targetElement = target as Element
   return targetElement.closest('[data-iaa-id]')
 }
 
-export function highlights (target: any): HTMLElement[] {
+/**
+ * Utility function to find all highlights that are ancestors of the given target.
+ *
+ * @param target a DOM node.
+ * @returns all highlight elements that are ancestors of the given target.
+ */
+export function highlights (target: Node | null): HTMLElement[] {
   let hl = closestHighlight(target)
   const result: HTMLElement[] = []
   while (hl) {
