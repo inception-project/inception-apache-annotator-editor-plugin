@@ -33,103 +33,145 @@ html > body {
 .iaa-highlighted {
   transition: filter var(--anim-fast);
   cursor: pointer;
-  border: solid var(--iaa-border-color);
-  border-bottom-width: var(----border-width);
   background-color: var(--iaa-background-color);
   box-sizing: border-box;
-
-  &.iaa-inline-label {
-    border-top-width: var(--border-width);
-  }
+  border: var(--border-width) none var(--iaa-border-color);
 
   &.iaa-first-highlight {
-    border-top-left-radius: 0.5em;
-    border-bottom-left-radius: 0.5em;
-    border-left-width: var(--border-width);
-    border-left-style: solid;
-    
-    &:before {
-      content: attr(data-iaa-label);
-      // ------------------------------
-      // These properties fine-tune the position of the label
-      font-size: 70%;
-      padding-top: 0.35em;
-      padding-bottom: 0.25em;
-      vertical-align: text-top;
-      // ------------------------------
-      white-space: nowrap; // Important to keep label on one line with following word
-      font-weight: 100;
-      padding-left: 5px;
-      padding-right: 5px;
-      margin-right: 5px;
-      border-top-left-radius: 0.5em;
-      border-bottom-left-radius: 0.5em;
-      background-color: var(--iaa-border-color);
-    }
+    padding-left: 5px;
   }
   
   &.iaa-last-highlight {
-    border-top-right-radius: 0.5em;
-    border-bottom-right-radius: 0.5em;
-    border-right-width: var(--border-width);
-    border-right-style: solid;
     padding-right: 5px;
+  }
+
+  &:not(.iaa-inline-label) {
+    border-bottom-style: solid;
+
+    // &.iaa-first-highlight {
+    //   margin-left: var(--border-width);
+    // }
+    
+    // &.iaa-last-highlight {
+    //   margin-right: var(--border-width);
+    // }
+   }
+
+  &.iaa-inline-label {
+    border-style: solid;
+  
+    &.iaa-first-highlight {
+      padding-left: 0px;
+
+      &:before {
+        content: attr(data-iaa-label);
+        // ------------------------------
+        // These properties fine-tune the position of the label
+        font-size: 70%;
+        padding-top: 0.35em;
+        padding-bottom: 0.25em;
+        vertical-align: text-top;
+        // ------------------------------
+        white-space: nowrap; // Important to keep label on one line with following word
+        font-weight: 100;
+        padding-left: 5px;
+        padding-right: 5px;
+        margin-right: 5px;
+        border-top-left-radius: 0.5em;
+        border-bottom-left-radius: 0.5em;
+        background-color: var(--iaa-border-color);
+      }
+    }
+
+    &.iaa-first-highlight {
+      border-top-left-radius: 0.5em;
+      border-bottom-left-radius: 0.5em;
+      border-left-width: var(--border-width);
+    }
+  
+    &.iaa-last-highlight {
+      border-top-right-radius: 0.5em;
+      border-bottom-right-radius: 0.5em;
+      border-right-width: var(--border-width);
+    }
   }
 }
 
 .iaa-hover {
-  &:not(.iaa-inline-label) {
-    box-shadow: 0px 0px 10px 3px var(--i7n-focus-color) !important;
-    box-decoration-break: clone;
-    -webkit-box-decoration-break: clone;
+  &.iaa-first-highlight {
+    border-left-style: solid;
+    border-left-color: var(--i7n-focus-bounds-color) !important;
+    border-left-width: calc(2 * var(--border-width)) !important;
   }
 
-  &.iaa-inline-label {
-    border-color: var(--i7n-focus-color) !important;
+  &.iaa-last-highlight {
+    border-right-style: solid;
+    border-right-color: var(--i7n-focus-bounds-color) !important;
+    border-right-width: calc(2 * var(--border-width)) !important;
+  }
+
+  &:not(.iaa-inline-label) {
+    // box-shadow: 0px 0px 10px 3px var(--i7n-focus-color) !important;
+    // box-decoration-break: clone;
+    // -webkit-box-decoration-break: clone;
     filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--i7n-focus-color)) brightness(var(--hover-brightness));
 
     &.iaa-first-highlight {
+      margin-left: calc(0px - 2 * var(--border-width)) !important;
+    }
+
+    &.iaa-last-highlight {
+      margin-right: calc(0px - 2 * var(--border-width)) !important;
+    }
+  }
+
+  &.iaa-inline-label {
+    border-color: var(--i7n-focus-color);
+    filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--i7n-focus-color)) brightness(var(--hover-brightness));
+
+    &.iaa-first-highlight {
+
+      &:not(.iaa-marker-focus) {
+        margin-left: calc(0px - var(--border-width));
+      }
+
       &:before {
-        background-color: var(--i7n-focus-color) !important;
+        background-color: var(--i7n-focus-color)t;
       }
     }
 
-    &.iaa-first-highlight {
-      border-left-color: var(--i7n-focus-bounds-color) !important;
-      &:not(.iaa-marker-focus) {
-        // marked annotations already use a fat border, so no need to fatten it
-        margin-left: calc(0px - var(--border-width));
-        border-left-width: calc(2 * var(--border-width));
-      }
-    }
     &.iaa-last-highlight {
-      border-right-color: var(--i7n-focus-bounds-color) !important;
       &:not(.iaa-marker-focus) {
-        // marked annotations already use a fat border, so no need to fatten it
-        border-right-width: calc(2 * var(--border-width));
         margin-right: calc(0px - var(--border-width));
       }
     }
   }
 }
 
+/**
+ * Highlighting of enpoints of the currently selected relation (since we can currently not draw
+ * the relation itself).
+ */
 .iaa-related {
   box-shadow: 0px calc(0px - var(--border-width)) 0px 0px var(--i7n-focus-color) !important;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
 
+/**
+ * Highlighting of the currently selected annotation.
+ */
 .iaa-marker-focus {
-  &:not(.iaa-inline-label) {
-    box-shadow: 0px var(--border-width) 0px 0px var(--i7n-focus-color) !important;
-    box-decoration-break: clone;
-    -webkit-box-decoration-break: clone;
-  }
+  border-color: var(--i7n-focus-color) !important;
+  border-width: calc(2 * var(--border-width)) !important;
 
-  &.iaa-inline-label {
-    border-color: var(--i7n-focus-color) !important;
-    border-width: calc(2 * var(--border-width)) !important;
+  // &:not(.iaa-inline-label) {
+  // box-shadow: 0px var(--border-width) 0px 0px var(--i7n-focus-color) !important;
+  // box-decoration-break: clone;
+  // -webkit-box-decoration-break: clone;
+  // }
   
+  &.iaa-inline-label {
     &.iaa-first-highlight {
       &:before {
         background-color: var(--i7n-focus-color) !important;

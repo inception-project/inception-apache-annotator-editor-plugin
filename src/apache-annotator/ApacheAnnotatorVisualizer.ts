@@ -19,6 +19,7 @@ import './ApacheAnnotatorEditor.scss'
 import { unpackCompactAnnotatedTextV2, DiamAjax, DiamLoadAnnotationsOptions, VID, ViewportTracker, offsetToRange, AnnotatedText, Span, TextMarker } from '@inception-project/inception-js-api'
 import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
 import { highlightText } from '@apache-annotator/dom'
+import { inlineLabelsEnabled } from './ApacheAnnotatorState'
 
 const CLASS_RELATED = 'iaa-related'
 
@@ -30,6 +31,7 @@ export class ApacheAnnotatorVisualizer {
   private toCleanUp = new Set<Function>()
   private observer: IntersectionObserver
   private tracker : ViewportTracker
+  private inlineLabelsEnabled = false
 
   private alpha = '55'
 
@@ -42,6 +44,11 @@ export class ApacheAnnotatorVisualizer {
     // Add event handlers for highlighting extent of the annotation the mouse is currently over
     this.root.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
     this.root.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
+
+    inlineLabelsEnabled.subscribe(enabled => { 
+      this.inlineLabelsEnabled = enabled
+      this.loadAnnotations()
+    })
   }
 
   private addAnnotationHighlight (event: MouseEvent) {
@@ -79,7 +86,8 @@ export class ApacheAnnotatorVisualizer {
       console.log(`Loaded ${doc.spans.size} span annotations`)
       doc.spans.forEach(span => this.renderSpanAnnotation(doc, span))
       this.removeEmptyHighlights()
-      this.renderInlineLabels()
+
+      this.postProcessHighlights()
     }
 
     if (doc.textMarkers) {
@@ -106,14 +114,16 @@ export class ApacheAnnotatorVisualizer {
     })
   }
 
-  private renderInlineLabels () {
+  private postProcessHighlights () {
     // Find all the highlights that belong to the same annotation (VID)
     const highlightsByVid = groupHighlightsByVid(this.getAllHighlights())
 
     // Add special CSS classes to the first and last highlight of each annotation
     for (const highlights of highlightsByVid.values()) {
       if (highlights.length) {
-        highlights.forEach(e => e.classList.add('iaa-inline-label'))
+        if (this.inlineLabelsEnabled) {
+          highlights.forEach(e => e.classList.add('iaa-inline-label'))
+        }
         highlights[0].classList.add('iaa-first-highlight')
         highlights[highlights.length - 1].classList.add('iaa-last-highlight')
       }

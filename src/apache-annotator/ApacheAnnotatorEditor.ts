@@ -18,12 +18,14 @@
 import { AnnotationEditor, DiamAjax, calculateStartOffset } from '@inception-project/inception-js-api'
 import { highlights, ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer'
 import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector'
+import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte'
 
 export class ApacheAnnotatorEditor implements AnnotationEditor {
   private ajax: DiamAjax
   private root: Element
   private vis: ApacheAnnotatorVisualizer
   private selector: ApacheAnnotatorSelector
+  private toolbar: ApacheAnnotatorToolbar
 
   public constructor (element: Element, ajax: DiamAjax) {
     this.ajax = ajax
@@ -31,6 +33,12 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
 
     this.vis = new ApacheAnnotatorVisualizer(this.root, this.ajax)
     this.selector = new ApacheAnnotatorSelector(this.root, this.ajax)
+
+    const toolbarContainer = this.root.ownerDocument.createElement('div')
+    toolbarContainer.style.position = 'sticky'
+    toolbarContainer.style.top = '0px'
+    this.root.ownerDocument.body.insertBefore(toolbarContainer, this.root.ownerDocument.body.firstChild)
+    this.toolbar = new ApacheAnnotatorToolbar({ target: toolbarContainer, props: {} })
 
     // Event handlers for opening the context menu
     this.root.addEventListener('mouseup', e => this.onMouseUp(e))
@@ -74,7 +82,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   }
 
   onRightClick (event: Event): void {
-    if (!(event instanceof MouseEvent)) return
+    if (!(event instanceof MouseEvent) || !(event.target instanceof Node)) return
 
     const hls = highlights(event.target)
     if (hls.length === 0) return
