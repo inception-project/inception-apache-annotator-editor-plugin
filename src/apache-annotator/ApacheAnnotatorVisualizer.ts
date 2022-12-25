@@ -16,8 +16,11 @@
  * limitations under the License.
  */
 import './ApacheAnnotatorEditor.scss'
-import { CompactAnnotatedText, CompactTextMarker, CompactAnnotationMarker, CompactSpan, DiamAjax, DiamLoadAnnotationsOptions, VID, ViewportTracker, offsetToRange } from '@inception-project/inception-js-api'
+import { unpackCompactAnnotatedTextV2, DiamAjax, DiamLoadAnnotationsOptions, VID, ViewportTracker, offsetToRange, AnnotatedText, Span, TextMarker } from '@inception-project/inception-js-api'
+import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
 import { highlightText } from '@apache-annotator/dom'
+
+const CLASS_RELATED = 'iaa-related'
 
 export class ApacheAnnotatorVisualizer {
   private ajax: DiamAjax
@@ -33,125 +36,160 @@ export class ApacheAnnotatorVisualizer {
     this.root = element
 
     this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
+    this.root.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
+    this.root.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
   }
 
-  private makeMarkerMap<T> (markerList: T[] | undefined): Map<VID, Array<T>> {
-    const markerMap = new Map<VID, Array<T>>()
-    if (markerList) {
-      markerList.forEach(marker => {
-        marker[1].forEach(vid => {
-          let ms = markerMap.get(vid)
-          if (!ms) {
-            ms = []
-            markerMap.set(vid, ms)
-          }
-          ms.push(marker)
-        })
-      })
-    }
-    return markerMap
+  private addAnnotationHighlight (event: MouseEvent) {
+    if (!(event.target instanceof Element)) return
+
+    const vid = event.target.getAttribute('data-iaa-id')
+    if (!vid) return
+
+    this.getHighlightsForAnnotation(vid).forEach(e => e.classList.add('iaa-hover'))
+  }
+
+  private removeAnnotationHighight (event: MouseEvent) {
+    if (!(event.target instanceof Element)) return
+
+    this.root.querySelectorAll('.iaa-hover').forEach(e => e.classList.remove('iaa-hover'))
   }
 
   public loadAnnotations (): void {
     const options: DiamLoadAnnotationsOptions = {
       range: this.tracker.currentRange,
-      includeText: false
+      includeText: false,
+      format: 'compact_v2'
     }
 
     this.ajax.loadAnnotations(options)
-      .then((doc: CompactAnnotatedText) => this.renderAnnotations(doc))
+      .then((doc: CompactAnnotatedText) => this.renderAnnotations(unpackCompactAnnotatedTextV2(doc)))
   }
 
-  private renderAnnotations (doc: CompactAnnotatedText): void {
+  private renderAnnotations (doc: AnnotatedText): void {
     const startTime = new Date().getTime()
-    const viewportBegin = doc.window[0]
 
     this.clearHighlights()
 
     if (doc.spans) {
-      console.log(`Loaded ${doc.spans.length} span annotations`)
-      const annotationMarkers = this.makeMarkerMap(doc.annotationMarkers)
-      doc.spans.forEach(span => this.renderSpanAnnotation(span, viewportBegin, annotationMarkers))
-    }
-
-    const selectedAnnotationVids : VID[] = []
-    if (doc.annotationMarkers) {
-      doc.annotationMarkers.filter(marker => marker[0] === 'focus')
-        .forEach(marker => marker[1].forEach(vid => selectedAnnotationVids.push(vid)))
+      console.log(`Loaded ${doc.spans.size} span annotations`)
+      doc.spans.forEach(span => this.renderSpanAnnotation(doc, span))
+      this.removeEmptyHighlights()
+      this.renderInlineLabels()
     }
 
     if (doc.textMarkers) {
-      doc.textMarkers.forEach(marker => this.renderTextMarker(marker, viewportBegin))
+      doc.textMarkers.forEach(marker => this.renderTextMarker(doc, marker))
     }
 
     if (doc.relations) {
-      this.renderSelectedRelationEndpointHighlights(doc, selectedAnnotationVids)
+      this.renderSelectedRelationEndpointHighlights(doc)
     }
 
-    // Clean up empty highlights
-    this.root.querySelectorAll('.iaa-highlighted').forEach(e => {
+    const endTime = new Date().getTime()
+    console.log(`Client-side rendering took ${Math.abs(endTime - startTime)}ms`)
+  }
+
+  /**
+   * The highlighter may create highlighs that are empty (they do not even contain whitespace). This
+   * method removes such highlights.
+   */
+  private removeEmptyHighlights () {
+    this.getAllHighlights().forEach(e => {
       if (!e.textContent) {
         e.remove()
       }
     })
-
-    const endTime = new Date().getTime()
-
-    console.log(`Client-side rendering took ${Math.abs(endTime - startTime)}ms`)
   }
 
-  private renderSelectedRelationEndpointHighlights (doc: CompactAnnotatedText, selectedAnnotationVids: VID[]) {
-    for (const relation of doc.relations || []) {
-      const vid = relation[0]
+  private renderInlineLabels () {
+    // Find all the highlights that belong to the same annotation (VID)
+    const highlightsByVid = this.groupHighlightsByVid(this.getAllHighlights())
 
-      if (!selectedAnnotationVids.includes(vid)) {
-        continue
+    // Add special CSS classes to the first and last highlight of each annotation
+    for (const highlights of highlightsByVid.values()) {
+      if (highlights.length) {
+        highlights.forEach(e => e.classList.add('iaa-inline-label'))
+        highlights[0].classList.add('iaa-first-highlight')
+        highlights[highlights.length - 1].classList.add('iaa-last-highlight')
       }
-
-      const args = relation[1]
-      const sourceVid = args[0][0]
-      const targetVid = args[1][0]
-      this.findSpanAnnotationElements(sourceVid).forEach(e => e.classList.add('iaa-related'))
-      this.findSpanAnnotationElements(targetVid).forEach(e => e.classList.add('iaa-related'))
     }
   }
 
-  private findSpanAnnotationElements (vid: VID) : NodeListOf<Element> {
+  private getAllHighlights () {
+    return this.root.querySelectorAll('.iaa-highlighted')
+  }
+
+  // eslint-disable-next-line no-undef
+  private groupHighlightsByVid (highlights: NodeListOf<Element>) {
+    const spansByVid = new Map<VID, Array<Element>>()
+    for (const highlight of highlights) {
+      const vid = highlight.getAttribute('data-iaa-id')
+      if (!vid) continue
+
+      let sectionGroup = spansByVid.get(vid)
+      if (!sectionGroup) {
+        sectionGroup = []
+        spansByVid.set(vid, sectionGroup)
+      }
+      sectionGroup.push(highlight)
+    }
+    return spansByVid
+  }
+
+  private renderSelectedRelationEndpointHighlights (doc: AnnotatedText) {
+    const selectedAnnotationVids = doc.markedAnnotations.get('focus') || []
+    for (const relation of doc.relations.values()) {
+      if (!selectedAnnotationVids.includes(relation.vid)) {
+        continue
+      }
+
+      const sourceVid = relation.arguments[0][0]
+      const targetVid = relation.arguments[1][0]
+      this.getHighlightsForAnnotation(sourceVid).forEach(e => e.classList.add(CLASS_RELATED))
+      this.getHighlightsForAnnotation(targetVid).forEach(e => e.classList.add(CLASS_RELATED))
+    }
+  }
+
+  // eslint-disable-next-line no-undef
+  private getHighlightsForAnnotation (vid: VID) : NodeListOf<Element> {
     return this.root.querySelectorAll(`[data-iaa-id="${vid}"]`)
   }
 
-  renderTextMarker (marker: CompactTextMarker, viewportBegin: number) {
-    const range = offsetToRange(this.root, marker[1][0][0] + viewportBegin, marker[1][0][1] + viewportBegin)
+  renderTextMarker (doc: AnnotatedText, marker: TextMarker) {
+    const range = offsetToRange(this.root, marker.offsets[0][0] + doc.window[0], marker.offsets[0][1] + doc.window[0])
+
     if (!range) {
       console.debug('Could not render text marker: ' + marker)
       return
     }
+
     const attributes = {
       class: `iaa-marker-${marker[0]}`
     }
+
     this.toCleanUp.add(highlightText(range, 'mark', attributes))
   }
 
-  renderSpanAnnotation (span: CompactSpan, viewportBegin: number, annotationMarkers: Map<VID, Array<CompactAnnotationMarker>>) {
-    const range = offsetToRange(this.root, span[1][0][0] + viewportBegin, span[1][0][1] + viewportBegin)
+  renderSpanAnnotation (doc: AnnotatedText, span: Span) {
+    const range = offsetToRange(this.root, span.offsets[0][0] + doc.window[0], span.offsets[0][1] + doc.window[0])
     if (!range) {
       console.debug('Could not render span annotation: ' + span)
       return
     }
 
     const classList = ['iaa-highlighted']
-    const ms = annotationMarkers.get(span[0]) || []
-    ms.forEach(m => classList.push(`iaa-marker-${m[0]}`))
+    const ms = doc.annotationMarkers.get(span.vid) || []
+    ms.forEach(m => classList.push(`iaa-marker-${m.type}`))
 
-    const cAttrs = span[2]
     const styleList = [
-      `background-color: ${cAttrs?.c}${this.alpha}`,
-      `border-bottom-color: ${cAttrs?.c};`
+      `--iaa-background-color: ${span.color || '#000000'}${this.alpha}`,
+      `--iaa-border-color: ${span.color || '#000000'}`
     ]
 
     const attributes = {
-      'data-iaa-id': `${span[0]}`,
-      'data-iaa-label': `${cAttrs?.l}`,
+      'data-iaa-id': `${span.vid}`,
+      'data-iaa-label': `${span.label || '◌'}`,
       class: classList.join(' '),
       style: styleList.join('; ')
     }

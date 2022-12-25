@@ -15,43 +15,131 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@use "./InceptionEditorColors.scss";
+ @import '~@inception-project/inception-js-api/src/style/InceptionEditorColors.scss';
 
- :root {
-  --iaa-focus-color: rgba(255,165,0);
-  --iaa-match-focus-color: rgb(0, 217, 255);
+:root {
+  --hover-brightness: 1.2;
+  --anim-slow: 0.7s;
+  --anim-fast: 0.4s;
+  --border-width: 2px;
 }
 
 html > body {
-  line-height: 180%;
+  line-height: 1.8;
   font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-/*  max-width: 700px;
-  margin: auto; */
   margin: 0px;
 }
 
 .iaa-highlighted {
+  transition: filter var(--anim-fast);
   cursor: pointer;
-  border-bottom: 2px solid;
-  /*
-  transform-style: preserve-3d;
-  */
+  border: solid var(--iaa-border-color);
+  border-bottom-width: var(----border-width);
+  background-color: var(--iaa-background-color);
+  box-sizing: border-box;
+
+  &.iaa-inline-label {
+    border-top-width: var(--border-width);
+  }
+
+  &.iaa-first-highlight {
+    border-top-left-radius: 0.5em;
+    border-bottom-left-radius: 0.5em;
+    border-left-width: var(--border-width);
+    border-left-style: solid;
+    
+    &:before {
+      content: attr(data-iaa-label);
+      // ------------------------------
+      // These properties fine-tune the position of the label
+      font-size: 70%;
+      padding-top: 0.35em;
+      padding-bottom: 0.25em;
+      vertical-align: text-top;
+      // ------------------------------
+      white-space: nowrap; // Important to keep label on one line with following word
+      font-weight: 100;
+      padding-left: 5px;
+      padding-right: 5px;
+      margin-right: 5px;
+      border-top-left-radius: 0.5em;
+      border-bottom-left-radius: 0.5em;
+      background-color: var(--iaa-border-color);
+    }
+  }
+  
+  &.iaa-last-highlight {
+    border-top-right-radius: 0.5em;
+    border-bottom-right-radius: 0.5em;
+    border-right-width: var(--border-width);
+    border-right-style: solid;
+    padding-right: 5px;
+  }
+}
+
+.iaa-hover {
+  &:not(.iaa-inline-label) {
+    box-shadow: 0px 0px 10px 3px var(--i7n-focus-color) !important;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  &.iaa-inline-label {
+    border-color: var(--i7n-focus-color) !important;
+    filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--i7n-focus-color)) brightness(var(--hover-brightness));
+
+    &.iaa-first-highlight {
+      &:before {
+        background-color: var(--i7n-focus-color) !important;
+      }
+    }
+
+    &.iaa-first-highlight {
+      border-left-color: var(--i7n-focus-bounds-color) !important;
+      &:not(.iaa-marker-focus) {
+        // marked annotations already use a fat border, so no need to fatten it
+        margin-left: calc(0px - var(--border-width));
+        border-left-width: calc(2 * var(--border-width));
+      }
+    }
+    &.iaa-last-highlight {
+      border-right-color: var(--i7n-focus-bounds-color) !important;
+      &:not(.iaa-marker-focus) {
+        // marked annotations already use a fat border, so no need to fatten it
+        border-right-width: calc(2 * var(--border-width));
+        margin-right: calc(0px - var(--border-width));
+      }
+    }
+  }
 }
 
 .iaa-related {
-  box-shadow: 0px -2px 0px 0px var(--iaa-focus-color) !important;
+  box-shadow: 0px calc(0px - var(--border-width)) 0px 0px var(--i7n-focus-color) !important;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
 
 .iaa-marker-focus {
-  box-shadow: 0px 2px 0px 0px var(--iaa-focus-color) !important;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
+  &:not(.iaa-inline-label) {
+    box-shadow: 0px var(--border-width) 0px 0px var(--i7n-focus-color) !important;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  &.iaa-inline-label {
+    border-color: var(--i7n-focus-color) !important;
+    border-width: calc(2 * var(--border-width)) !important;
+  
+    &.iaa-first-highlight {
+      &:before {
+        background-color: var(--i7n-focus-color) !important;
+      }
+    }
+  }
 }
 
 .iaa-marker-matchfocus {
-  box-shadow: 0px 2px 0px 0px var(--iaa-match-focus-color) !important;
+  box-shadow: 0px var(--border-width) 0px 0px var(--i7n-match-focus-color) !important;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
@@ -61,7 +149,7 @@ html > body {
   background-color: white;
   color: black;
   border: solid gray 1px;
-  border-radius: 4px;
+  border-radius: 5px;
   font-family: sans-serif;
   box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
 }
