@@ -21,9 +21,9 @@ import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/mo
 import { highlightText } from '@apache-annotator/dom'
 import { inlineLabelsEnabled } from './ApacheAnnotatorState'
 
-const CLASS_RELATED = 'iaa-related'
+export const CLASS_RELATED = 'iaa-related'
 
-const NO_LABEL = '◌'
+export const NO_LABEL = '◌'
 
 export class ApacheAnnotatorVisualizer {
   private ajax: DiamAjax
@@ -45,7 +45,7 @@ export class ApacheAnnotatorVisualizer {
     this.root.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
     this.root.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
 
-    inlineLabelsEnabled.subscribe(enabled => { 
+    inlineLabelsEnabled.subscribe(enabled => {
       this.inlineLabelsEnabled = enabled
       this.loadAnnotations()
     })
@@ -284,4 +284,34 @@ export function highlights (target: Node | null): HTMLElement[] {
     hl = closestHighlight(hl.parentElement)
   }
   return result
+}
+
+/**
+ * Calculates the rectangle of the inline label for the given highlight.
+ *
+ * @param highlight a highlight element.
+ * @returns the inline label rectangle.
+ */
+export function getInlineLabelRect (highlight: Element): DOMRect {
+  const r = highlight.getClientRects()[0]
+
+  let cr: DOMRect
+  if (highlight.firstChild instanceof Text) {
+    const range = document.createRange()
+    range.selectNode(highlight.firstChild)
+    cr = range.getClientRects()[0]
+  } else if (highlight.firstChild instanceof Element) {
+    cr = highlight.firstChild.getClientRects()[0]
+  } else {
+    throw new Error('Unexpected node type')
+  }
+
+  return new DOMRect(r.left, r.top, cr.left - r.left, r.height)
+}
+
+/**
+ * Checks if the given point is inside the given DOMRect.
+ */
+export function isPointInRect (point: { x: number; y: number }, rect: DOMRect): boolean {
+  return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom
 }

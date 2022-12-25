@@ -40,8 +40,10 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     this.root.ownerDocument.body.insertBefore(toolbarContainer, this.root.ownerDocument.body.firstChild)
     this.toolbar = new ApacheAnnotatorToolbar({ target: toolbarContainer, props: {} })
 
-    // Event handlers for opening the context menu
+    // Event handler for creating an annotion or selecting an annotation
     this.root.addEventListener('mouseup', e => this.onMouseUp(e))
+
+    // Event handler for opening the context menu
     this.root.addEventListener('contextmenu', e => this.onRightClick(e))
 
     // Prevent right-click from triggering a selection event

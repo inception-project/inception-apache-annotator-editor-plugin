@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import type { DiamAjax, VID } from '@inception-project/inception-js-api'
-import { highlights } from './ApacheAnnotatorVisualizer'
+import { getInlineLabelRect, highlights, isPointInRect, NO_LABEL } from './ApacheAnnotatorVisualizer'
 import { createPopper, Instance } from '@popperjs/core'
 
 export class ApacheAnnotatorSelector {
@@ -44,13 +44,11 @@ export class ApacheAnnotatorSelector {
       return
     }
 
-    this.destoryPopup()
+    this.destroyPopup()
   }
 
-  private destoryPopup () {
-    if (!this.popup) {
-      return
-    }
+  private destroyPopup () {
+    if (!this.popup) return
 
     this.popup.destroy()
     this.popupContent?.remove()
@@ -67,20 +65,25 @@ export class ApacheAnnotatorSelector {
   public showSelector (event: Event): void {
     const mouseEvent = event as MouseEvent
 
-    this.destoryPopup()
+    this.destroyPopup()
 
-    const hls = highlights(event.target)
+    const hls = event.target instanceof Node ? highlights(event.target) : []
+    // No need to show selector if there is no annotation
+    if (hls.length === 0) return
 
-    if (hls.length === 0) {
-      return
-    }
-
-    if (hls.length === 1) {
+    if (hls.length === 1 || isPointInRect({ x: mouseEvent.clientX, y: mouseEvent.clientY }, getInlineLabelRect(hls[0]))) {
+      // No need to show selector if there is only a single annotation or if the user clicked on the
+      // inline label
       const vid = hls[0].getAttribute('data-iaa-id')
-      if (vid) this.ajax.selectAnnotation(vid)
+      if (!vid) return
+      this.ajax.selectAnnotation(vid)
       return
     }
 
+    this.createPopup(mouseEvent, hls)
+  }
+
+  private createPopup (mouseEvent: MouseEvent, hls: HTMLElement[]) {
     this.popupAnchor = document.createElement('div')
     this.popupAnchor.style.position = 'absolute'
     this.popupAnchor.style.top = `${mouseEvent.clientY + window.scrollY}px`
@@ -98,9 +101,10 @@ export class ApacheAnnotatorSelector {
       const menuItem = document.createElement('div')
       menuItem.classList.add('iaa-menu-item')
 
+      const label = hl.getAttribute('data-iaa-label') || NO_LABEL
       const labelArea = document.createElement('div')
       labelArea.classList.add('iaa-label')
-      labelArea.textContent = hl.getAttribute('data-iaa-label') || 'no label'
+      labelArea.textContent = label !== NO_LABEL ? label : 'no label'
       labelArea.style.cursor = 'pointer'
       labelArea.addEventListener('click', e => this.onSelectAnnotation(e, vid))
       menuItem.appendChild(labelArea)
@@ -121,18 +125,18 @@ export class ApacheAnnotatorSelector {
   private onSelectAnnotation (event: Event, id: VID) {
     console.log(`Selecting annotation ${id}`)
     event.stopPropagation()
-    this.destoryPopup()
+    this.destroyPopup()
     this.ajax.selectAnnotation(id)
   }
 
   private onDeleteAnnotation (event: Event, id: VID) {
     console.log(`Deleting annotation ${id}`)
     event.stopPropagation()
-    this.destoryPopup()
+    this.destroyPopup()
     this.ajax.deleteAnnotation(id)
   }
 
   destroy (): void {
-    this.destoryPopup()
+    this.destroyPopup()
   }
 }
