@@ -19,7 +19,7 @@ import './ApacheAnnotatorEditor.scss'
 import { unpackCompactAnnotatedTextV2, DiamAjax, DiamLoadAnnotationsOptions, VID, ViewportTracker, offsetToRange, AnnotatedText, Span, TextMarker } from '@inception-project/inception-js-api'
 import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
 import { highlightText } from '@apache-annotator/dom'
-import { inlineLabelsEnabled } from './ApacheAnnotatorState'
+import { showEmptyHighlights, showLabels } from './ApacheAnnotatorState'
 
 export const CLASS_RELATED = 'iaa-related'
 
@@ -31,7 +31,8 @@ export class ApacheAnnotatorVisualizer {
   private toCleanUp = new Set<Function>()
   private observer: IntersectionObserver
   private tracker : ViewportTracker
-  private inlineLabelsEnabled = false
+  private showInlineLabels = false
+  private showEmptyHighlights = false
 
   private alpha = '55'
 
@@ -45,8 +46,13 @@ export class ApacheAnnotatorVisualizer {
     this.root.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
     this.root.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
 
-    inlineLabelsEnabled.subscribe(enabled => {
-      this.inlineLabelsEnabled = enabled
+    showLabels.subscribe(enabled => {
+      this.showInlineLabels = enabled
+      this.loadAnnotations()
+    })
+
+    showEmptyHighlights.subscribe(enabled => {
+      this.showEmptyHighlights = enabled
       this.loadAnnotations()
     })
   }
@@ -85,7 +91,10 @@ export class ApacheAnnotatorVisualizer {
     if (doc.spans) {
       console.log(`Loaded ${doc.spans.size} span annotations`)
       doc.spans.forEach(span => this.renderSpanAnnotation(doc, span))
-      this.removeEmptyHighlights()
+      this.removeZeroWidthHighlights()
+      if (!this.showEmptyHighlights) {
+        this.removeWhitepaceOnlyHighlights()
+      }
 
       this.postProcessHighlights()
     }
@@ -106,10 +115,26 @@ export class ApacheAnnotatorVisualizer {
    * The highlighter may create highlighs that are empty (they do not even contain whitespace). This
    * method removes such highlights.
    */
-  private removeEmptyHighlights () {
+  private removeZeroWidthHighlights () {
     this.getAllHighlights().forEach(e => {
       if (!e.textContent) {
+        // Removing the entire highlight element here should be find as it should not contain any
+        // relevant DOM nodes, e.g. nodes relevant to text offsets.
         e.remove()
+      }
+    })
+  }
+
+  /**
+   * Some highliths may only contain whitepace. This method removes such highlights.
+   */
+  private removeWhitepaceOnlyHighlights () {
+    this.getAllHighlights().forEach(e => {
+      if (!e.textContent?.trim()) {
+        // Normally we would want to remove the highlight element, but that would also remove the child
+        // nodes (i.e. the whitespace text node) which we want to keep. So we just remove the
+        // highlight class from the mark element.
+        e.classList.remove('iaa-highlighted')
       }
     })
   }
@@ -121,7 +146,7 @@ export class ApacheAnnotatorVisualizer {
     // Add special CSS classes to the first and last highlight of each annotation
     for (const highlights of highlightsByVid.values()) {
       if (highlights.length) {
-        if (this.inlineLabelsEnabled) {
+        if (this.showInlineLabels) {
           highlights.forEach(e => e.classList.add('iaa-inline-label'))
         }
         highlights[0].classList.add('iaa-first-highlight')

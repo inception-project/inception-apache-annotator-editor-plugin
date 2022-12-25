@@ -34,11 +34,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     this.vis = new ApacheAnnotatorVisualizer(this.root, this.ajax)
     this.selector = new ApacheAnnotatorSelector(this.root, this.ajax)
 
-    const toolbarContainer = this.root.ownerDocument.createElement('div')
-    toolbarContainer.style.position = 'sticky'
-    toolbarContainer.style.top = '0px'
-    this.root.ownerDocument.body.insertBefore(toolbarContainer, this.root.ownerDocument.body.firstChild)
-    this.toolbar = new ApacheAnnotatorToolbar({ target: toolbarContainer, props: {} })
+    this.toolbar = this.createToolbar()
 
     // Event handler for creating an annotion or selecting an annotation
     this.root.addEventListener('mouseup', e => this.onMouseUp(e))
@@ -50,6 +46,18 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     this.root.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
     this.root.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
     this.root.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
+  }
+
+  private createToolbar() {
+    // Svelte components are appended to the target element. However, we want the toolbar to come
+    // first in the DOM, so we first create a container element and prepend it to the body.
+    const toolbarContainer = this.root.ownerDocument.createElement('div')
+    toolbarContainer.style.position = 'sticky'
+    toolbarContainer.style.top = '0px'
+    this.root.ownerDocument.body.insertBefore(toolbarContainer, this.root.ownerDocument.body.firstChild)
+
+    // @ts-ignore - VSCode does not seem to understand the Svelte component
+    return new ApacheAnnotatorToolbar({ target: toolbarContainer, props: {} })
   }
 
   private cancelRightClick (e: Event): void {

@@ -18,4 +18,6 @@
 
 import { writable } from 'svelte/store'
 
-export const inlineLabelsEnabled = writable(false)
+export const showLabels = writable(true)
+
+export const showEmptyHighlights = writable(false)

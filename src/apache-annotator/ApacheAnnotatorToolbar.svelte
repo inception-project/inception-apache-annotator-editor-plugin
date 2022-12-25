@@ -16,14 +16,18 @@
   limitations under the License.
 -->
 <script lang="ts">
-  import { inlineLabelsEnabled } from './ApacheAnnotatorState'
+  import { showLabels, showEmptyHighlights } from './ApacheAnnotatorState'
 </script>
 
 <div class="toolbar card border-0 border-bottom rounded-0 p-1">
-  <div>
-    <div class="form-check form-switch">
-      <input class="form-check-input" type="checkbox" role="switch" id="inlineLabelsEnabled" bind:checked={$inlineLabelsEnabled}>
-      <label class="form-check-label" for="inlineLabelsEnabled">Inline</label>
+  <div class="d-flex">
+    <div class="form-check form-switch mx-2">
+      <input class="form-check-input" type="checkbox" role="switch" id="inlineLabelsEnabled" bind:checked={$showLabels}>
+      <label class="form-check-label" for="inlineLabelsEnabled">Labels</label>
+    </div>
+    <div class="form-check form-switch mx-2">
+      <input class="form-check-input" type="checkbox" role="switch" id="showEmptyHighlights" bind:checked={$showEmptyHighlights}>
+      <label class="form-check-label" for="showEmptyHighlights">Empties</label>
     </div>
   </div>
 </div>
@@ -31,4 +35,8 @@
 <!-- svelte-ignore css-unused-selector -->
 <style lang="scss">
   @import '../../node_modules/bootstrap/scss/bootstrap.scss';
+
+  .toolbar {
+    z-index: 1000;
+  }
 </style>
