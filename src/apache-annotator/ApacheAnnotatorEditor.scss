@@ -34,6 +34,9 @@ html > body {
   overflow: auto;
 }
 
+/**
+ * Annotation highlight.
+ */
 .iaa-highlighted {
   transition: filter var(--anim-fast);
   cursor: pointer;
@@ -43,23 +46,17 @@ html > body {
 
   &.iaa-first-highlight {
     padding-left: 5px;
+    margin-left: var(--border-width)
   }
   
   &.iaa-last-highlight {
     padding-right: 5px;
+    margin-right: var(--border-width)
   }
 
   &:not(.iaa-inline-label) {
     border-bottom-style: solid;
-
-    // &.iaa-first-highlight {
-    //   margin-left: var(--border-width);
-    // }
-    
-    // &.iaa-last-highlight {
-    //   margin-right: var(--border-width);
-    // }
-   }
+  }
 
   &.iaa-inline-label {
     border-style: solid;
@@ -101,6 +98,27 @@ html > body {
   }
 }
 
+/**
+ * Highlighting of the currently selected annotation.
+ */
+ .iaa-marker-focus {
+  border-color: var(--i7n-focus-color) !important;
+  border-width: calc(2 * var(--border-width)) !important;
+
+  &.iaa-inline-label {
+    &.iaa-first-highlight {
+      margin-left: 0px;
+
+      &:before {
+        background-color: var(--i7n-focus-color) !important;
+      }
+    }
+    &.iaa-last-highlight {
+      margin-right: 0px;
+    }
+  }
+}
+
 .iaa-hover {
   &.iaa-first-highlight {
     border-left-style: solid;
@@ -115,17 +133,14 @@ html > body {
   }
 
   &:not(.iaa-inline-label) {
-    // box-shadow: 0px 0px 10px 3px var(--i7n-focus-color) !important;
-    // box-decoration-break: clone;
-    // -webkit-box-decoration-break: clone;
     filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--i7n-focus-color)) brightness(var(--hover-brightness));
 
     &.iaa-first-highlight {
-      margin-left: calc(0px - 2 * var(--border-width)) !important;
+      margin-left: calc(0px - var(--border-width)) !important;
     }
 
     &.iaa-last-highlight {
-      margin-right: calc(0px - 2 * var(--border-width)) !important;
+      margin-right: calc(0px - var(--border-width)) !important;
     }
   }
 
@@ -136,7 +151,7 @@ html > body {
     &.iaa-first-highlight {
 
       &:not(.iaa-marker-focus) {
-        margin-left: calc(0px - var(--border-width));
+       margin-left: 0px;
       }
 
       &:before {
@@ -146,7 +161,7 @@ html > body {
 
     &.iaa-last-highlight {
       &:not(.iaa-marker-focus) {
-        margin-right: calc(0px - var(--border-width));
+        margin-right: 0px;
       }
     }
   }
@@ -160,28 +175,6 @@ html > body {
   box-shadow: 0px calc(0px - var(--border-width)) 0px 0px var(--i7n-focus-color) !important;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-}
-
-/**
- * Highlighting of the currently selected annotation.
- */
-.iaa-marker-focus {
-  border-color: var(--i7n-focus-color) !important;
-  border-width: calc(2 * var(--border-width)) !important;
-
-  // &:not(.iaa-inline-label) {
-  // box-shadow: 0px var(--border-width) 0px 0px var(--i7n-focus-color) !important;
-  // box-decoration-break: clone;
-  // -webkit-box-decoration-break: clone;
-  // }
-  
-  &.iaa-inline-label {
-    &.iaa-first-highlight {
-      &:before {
-        background-color: var(--i7n-focus-color) !important;
-      }
-    }
-  }
 }
 
 .iaa-marker-matchfocus {
