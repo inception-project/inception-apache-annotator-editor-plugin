@@ -69,8 +69,9 @@ html > body {
         // ------------------------------
         // These properties fine-tune the position of the label
         font-size: 70%;
-        padding-top: 0.35em;
-        padding-bottom: 0.25em;
+        line-height: 1.7;
+        padding-top: 0.30em;
+        padding-bottom: 0.30em;
         vertical-align: text-top;
         // ------------------------------
         white-space: nowrap; // Important to keep label on one line with following word
@@ -111,6 +112,8 @@ html > body {
 
       &:before {
         background-color: var(--i7n-focus-color) !important;
+        border-top-left-radius: 0.3em;
+        border-bottom-left-radius: 0.3em;
       }
     }
     &.iaa-last-highlight {
