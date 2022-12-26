@@ -25,9 +25,13 @@
 }
 
 html > body {
-  line-height: 1.8;
-  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
   margin: 0px;
+}
+
+.iaa-wrapper {
+  line-height: 1.8;
+  overflow: auto;
 }
 
 .iaa-highlighted {

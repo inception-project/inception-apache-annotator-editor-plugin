@@ -48,7 +48,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     this.root.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
   }
 
-  private createToolbar() {
+  private createToolbar () {
     // Svelte components are appended to the target element. However, we want the toolbar to come
     // first in the DOM, so we first create a container element and prepend it to the body.
     const toolbarContainer = this.root.ownerDocument.createElement('div')

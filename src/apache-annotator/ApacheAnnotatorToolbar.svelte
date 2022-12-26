@@ -19,7 +19,7 @@
   import { showLabels, showEmptyHighlights } from './ApacheAnnotatorState'
 </script>
 
-<div class="toolbar card border-0 border-bottom rounded-0 p-1">
+<div class="bootstrap card card-header border-0 border-bottom rounded-0 p-1" role="toolbar">
   <div class="d-flex">
     <div class="form-check form-switch mx-2">
       <input class="form-check-input" type="checkbox" role="switch" id="inlineLabelsEnabled" bind:checked={$showLabels}>
@@ -36,7 +36,8 @@
 <style lang="scss">
   @import '../../node_modules/bootstrap/scss/bootstrap.scss';
 
-  .toolbar {
-    z-index: 1000;
+  .bootstrap {
+    // Ensure that Bootstrap properly applies to the component
+    @extend body
   }
 </style>

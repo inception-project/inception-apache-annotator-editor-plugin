@@ -47,12 +47,18 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
     // used as a container for the additional editor functionality.
     const body = element.ownerDocument?.body
     if (body && body === targetElement) {
-      if (body.childElementCount === 1) {
-        targetElement = body.firstChild as Element
-      } else {
-        console.warn('Body has more than one child element, using entire body as target element.' +
-          'This may cause problems when the editor injects additional UI elements into the body.')
-      }
+      // Add a (scrolling) wrapper around the target element
+      const wrapper = element.ownerDocument.createElement('div')
+      wrapper.classList.add('iaa-wrapper')
+      body.childNodes.forEach((child) => wrapper.appendChild(child))
+      body.appendChild(wrapper)
+      targetElement = wrapper
+
+      // Configure a "full screen" flex layout on the body
+      body.style.display = 'flex'
+      body.style.flexDirection = 'column'
+      body.style.height = '100vh'
+      body.style.width = '100vw'
     }
 
     element[PROP_EDITOR] = new ApacheAnnotatorEditor(targetElement, ajax)
