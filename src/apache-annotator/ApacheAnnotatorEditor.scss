@@ -132,6 +132,7 @@ html > body {
   left: calc(var(--vertical-tray-width) / 2 - var(--border-width));
 
   .terminator-start {
+    cursor: s-resize;
     position: absolute;
     top: calc(0px - 2 * var(--border-width));
     left: calc(0px - var(--border-width));
@@ -141,6 +142,7 @@ html > body {
   }  
 
   .terminator-end {
+    cursor: n-resize;
     position: absolute;
     bottom: calc(0px - 2 * var(--border-width));
     left: calc(0px - var(--border-width));

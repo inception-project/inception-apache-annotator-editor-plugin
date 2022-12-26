@@ -76,6 +76,7 @@ export class ApacheAnnotatorVisualizer {
     const options: DiamLoadAnnotationsOptions = {
       range: this.tracker.currentRange,
       includeText: false,
+      clipSpans: false,
       format: 'compact_v2'
     }
 
@@ -130,18 +131,28 @@ export class ApacheAnnotatorVisualizer {
     this.root.appendChild(vhl)
 
     const selectedAnnotation = doc.spans.get(selectedAnnotationVids[0])
-    if (!(selectedAnnotation?.clippingFlags?.startsWith('s'))) {
-      const vhlEnd = this.root.ownerDocument.createElement('div')
-      vhlEnd.classList.add('iaa-vertical-marker-focus')
-      vhlEnd.classList.add('terminator-start')
-      vhl.appendChild(vhlEnd)
+    if (!selectedAnnotation) return
+
+    if (!(selectedAnnotation.clippingFlags?.startsWith('s'))) {
+      const terminator = this.root.ownerDocument.createElement('div')
+      terminator.classList.add('iaa-vertical-marker-focus')
+      terminator.classList.add('terminator-start')
+      terminator.addEventListener('click', e => {
+        e.stopPropagation()
+        this.scrollTo({ offset: selectedAnnotation.offsets[0][1] + doc.window[0], position: 'unused' })
+      })
+      vhl.appendChild(terminator)
     }
 
-    if (!(selectedAnnotation?.clippingFlags?.endsWith('e'))) {
-      const vhlEnd = this.root.ownerDocument.createElement('div')
-      vhlEnd.classList.add('iaa-vertical-marker-focus')
-      vhlEnd.classList.add('terminator-end')
-      vhl.appendChild(vhlEnd)
+    if (!(selectedAnnotation.clippingFlags?.endsWith('e'))) {
+      const terminator = this.root.ownerDocument.createElement('div')
+      terminator.classList.add('iaa-vertical-marker-focus')
+      terminator.classList.add('terminator-end')
+      terminator.addEventListener('click', e => {
+        e.stopPropagation()
+        this.scrollTo({ offset: selectedAnnotation.offsets[0][0] + doc.window[0], position: 'unused' })
+      })
+      vhl.appendChild(terminator)
     }
   }
 
@@ -256,6 +267,7 @@ export class ApacheAnnotatorVisualizer {
   scrollTo (args: { offset: number; position: string; }): void {
     const range = offsetToRange(this.root, args.offset, args.offset)
     if (!range) return
+
     const removeHighlight = highlightText(range, 'mark', { id: 'iaa-scroll-marker' })
     this.root.querySelector('#iaa-scroll-marker')?.scrollIntoView(
       { behavior: 'auto', block: 'center', inline: 'nearest' })
