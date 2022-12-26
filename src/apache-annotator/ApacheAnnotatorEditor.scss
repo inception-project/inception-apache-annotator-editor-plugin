@@ -22,6 +22,7 @@
   --anim-slow: 0.7s;
   --anim-fast: 0.4s;
   --border-width: 2px;
+  --vertical-tray-width: 16px;
 }
 
 html > body {
@@ -30,8 +31,10 @@ html > body {
 }
 
 .iaa-wrapper {
+  position: relative;
   line-height: 1.8;
   overflow: auto;
+  padding-left: var(--vertical-tray-width);
 }
 
 /**
@@ -120,6 +123,31 @@ html > body {
       margin-right: 0px;
     }
   }
+}
+
+.iaa-vertical-marker-focus {
+  position: absolute;
+  width: calc(2 * var(--border-width));
+  background-color: var(--i7n-focus-color);
+  left: calc(var(--vertical-tray-width) / 2 - var(--border-width));
+
+  .terminator-start {
+    position: absolute;
+    top: calc(0px - 2 * var(--border-width));
+    left: calc(0px - var(--border-width));
+    border-radius: 50%;
+    width: calc(4 * var(--border-width));
+    height: calc(4 * var(--border-width));
+  }  
+
+  .terminator-end {
+    position: absolute;
+    bottom: calc(0px - 2 * var(--border-width));
+    left: calc(0px - var(--border-width));
+    border-radius: 50%;
+    width: calc(4 * var(--border-width));
+    height: calc(4 * var(--border-width));
+  }  
 }
 
 .iaa-hover {

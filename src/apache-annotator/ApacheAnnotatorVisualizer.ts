@@ -101,6 +101,7 @@ export class ApacheAnnotatorVisualizer {
 
     if (doc.textMarkers) {
       doc.textMarkers.forEach(marker => this.renderTextMarker(doc, marker))
+      this.renderVerticalSelectionMarker(doc)
     }
 
     if (doc.relations) {
@@ -109,6 +110,39 @@ export class ApacheAnnotatorVisualizer {
 
     const endTime = new Date().getTime()
     console.log(`Client-side rendering took ${Math.abs(endTime - startTime)}ms`)
+  }
+
+  private renderVerticalSelectionMarker (doc: AnnotatedText) {
+    // We assume for the moment that only one annotation can be selected at a time
+    const selectedAnnotationVids = doc.markedAnnotations.get('focus') || []
+    if (selectedAnnotationVids.length === 0) return
+
+    const highlights = Array.from(this.root.querySelectorAll('.iaa-marker-focus').values())
+    const top = Math.min(...highlights.map(e => e.getBoundingClientRect().top))
+    const bottom = Math.max(...highlights.map(e => e.getBoundingClientRect().bottom))
+
+    const scrollerContainerRect = this.root.getBoundingClientRect()
+
+    const vhl = this.root.ownerDocument.createElement('div')
+    vhl.classList.add('iaa-vertical-marker-focus')
+    vhl.style.top = `${top - scrollerContainerRect.top + this.root.scrollTop}px`
+    vhl.style.height = `${bottom - top}px`
+    this.root.appendChild(vhl)
+
+    const selectedAnnotation = doc.spans.get(selectedAnnotationVids[0])
+    if (!(selectedAnnotation?.clippingFlags?.startsWith('s'))) {
+      const vhlEnd = this.root.ownerDocument.createElement('div')
+      vhlEnd.classList.add('iaa-vertical-marker-focus')
+      vhlEnd.classList.add('terminator-start')
+      vhl.appendChild(vhlEnd)
+    }
+
+    if (!(selectedAnnotation?.clippingFlags?.endsWith('e'))) {
+      const vhlEnd = this.root.ownerDocument.createElement('div')
+      vhlEnd.classList.add('iaa-vertical-marker-focus')
+      vhlEnd.classList.add('terminator-end')
+      vhl.appendChild(vhlEnd)
+    }
   }
 
   /**
@@ -229,6 +263,8 @@ export class ApacheAnnotatorVisualizer {
   }
 
   private clearHighlights (): void {
+    this.root.querySelectorAll('.iaa-vertical-marker-focus').forEach(e => e.remove())
+
     if (!this.toCleanUp || this.toCleanUp.size === 0) {
       return
     }
