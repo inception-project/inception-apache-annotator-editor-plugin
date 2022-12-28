@@ -33,7 +33,6 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
 
     this.vis = new ApacheAnnotatorVisualizer(this.root, this.ajax)
     this.selector = new ApacheAnnotatorSelector(this.root, this.ajax)
-
     this.toolbar = this.createToolbar()
 
     // Event handler for creating an annotion or selecting an annotation

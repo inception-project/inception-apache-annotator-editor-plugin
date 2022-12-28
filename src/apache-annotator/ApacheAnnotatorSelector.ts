@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import type { DiamAjax, VID } from '@inception-project/inception-js-api'
-import { getInlineLabelRect, highlights, isPointInRect, NO_LABEL } from './ApacheAnnotatorVisualizer'
+import { getInlineLabelClientRect, highlights, isPointInRect, NO_LABEL } from './ApacheAnnotatorVisualizer'
 import { createPopper, Instance } from '@popperjs/core'
 
 export class ApacheAnnotatorSelector {
@@ -71,7 +71,7 @@ export class ApacheAnnotatorSelector {
     // No need to show selector if there is no annotation
     if (hls.length === 0) return
 
-    if (hls.length === 1 || isPointInRect({ x: mouseEvent.clientX, y: mouseEvent.clientY }, getInlineLabelRect(hls[0]))) {
+    if (hls.length === 1 || isPointInRect({ x: mouseEvent.clientX, y: mouseEvent.clientY }, getInlineLabelClientRect(hls[0]))) {
       // No need to show selector if there is only a single annotation or if the user clicked on the
       // inline label
       const vid = hls[0].getAttribute('data-iaa-id')

@@ -20,6 +20,7 @@ import { unpackCompactAnnotatedTextV2, DiamAjax, DiamLoadAnnotationsOptions, VID
 import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
 import { highlightText } from '@apache-annotator/dom'
 import { showEmptyHighlights, showLabels } from './ApacheAnnotatorState'
+import { ResizeManager } from './ResizeManager'
 
 export const CLASS_RELATED = 'iaa-related'
 
@@ -27,9 +28,10 @@ export const NO_LABEL = '◌'
 
 export class ApacheAnnotatorVisualizer {
   private ajax: DiamAjax
-  private root: Element
+  readonly root: Element
   private toCleanUp = new Set<Function>()
   private observer: IntersectionObserver
+  private resizer: ResizeManager
   private tracker : ViewportTracker
   private showInlineLabels = false
   private showEmptyHighlights = false
@@ -41,6 +43,10 @@ export class ApacheAnnotatorVisualizer {
     this.root = element
 
     this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
+    this.resizer = new ResizeManager(this, this.ajax)
+
+    // Event handlers for the resizer component
+    this.root.addEventListener('mouseover', e => this.showResizer(e))
 
     // Add event handlers for highlighting extent of the annotation the mouse is currently over
     this.root.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
@@ -55,6 +61,13 @@ export class ApacheAnnotatorVisualizer {
       this.showEmptyHighlights = enabled
       this.loadAnnotations()
     })
+  }
+
+  private showResizer (event: Event): void {
+    if (!(event instanceof MouseEvent) || !(event.target instanceof HTMLElement)) return
+
+    const vid = event.target.getAttribute('data-iaa-id')
+    if (vid) this.resizer.show(vid)
   }
 
   private addAnnotationHighlight (event: MouseEvent) {
@@ -88,6 +101,7 @@ export class ApacheAnnotatorVisualizer {
     const startTime = new Date().getTime()
 
     this.clearHighlights()
+    this.resizer.hide()
 
     if (doc.spans) {
       console.log(`Loaded ${doc.spans.size} span annotations`)
@@ -118,7 +132,7 @@ export class ApacheAnnotatorVisualizer {
     const selectedAnnotationVids = doc.markedAnnotations.get('focus') || []
     if (selectedAnnotationVids.length === 0) return
 
-    const highlights = Array.from(this.root.querySelectorAll('.iaa-marker-focus').values())
+    const highlights = Array.from(this.root.querySelectorAll('.iaa-marker-focus'))
     const top = Math.min(...highlights.map(e => e.getBoundingClientRect().top))
     const bottom = Math.max(...highlights.map(e => e.getBoundingClientRect().bottom))
 
@@ -219,7 +233,7 @@ export class ApacheAnnotatorVisualizer {
   }
 
   // eslint-disable-next-line no-undef
-  private getHighlightsForAnnotation (vid: VID) : NodeListOf<Element> {
+  getHighlightsForAnnotation (vid: VID) : NodeListOf<Element> {
     return this.root.querySelectorAll(`[data-iaa-id="${vid}"]`)
   }
 
@@ -308,7 +322,7 @@ export class ApacheAnnotatorVisualizer {
 // eslint-disable-next-line no-undef
 export function groupHighlightsByVid (highlights: NodeListOf<Element>) {
   const spansByVid = new Map<VID, Array<Element>>()
-  for (const highlight of highlights) {
+  for (const highlight of Array.from(highlights)) {
     const vid = highlight.getAttribute('data-iaa-id')
     if (!vid) continue
 
@@ -365,8 +379,11 @@ export function highlights (target: Node | null): HTMLElement[] {
  * @param highlight a highlight element.
  * @returns the inline label rectangle.
  */
-export function getInlineLabelRect (highlight: Element): DOMRect {
+export function getInlineLabelClientRect (highlight: Element): DOMRect {
   const r = highlight.getClientRects()[0]
+
+  // TODO: It may be possible to implement this in a simpler way using
+  // `window.getComputedStyle(highlight, ':before')`
 
   let cr: DOMRect
   if (highlight.firstChild instanceof Text) {
