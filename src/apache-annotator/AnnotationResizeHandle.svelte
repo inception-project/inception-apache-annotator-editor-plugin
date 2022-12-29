@@ -91,7 +91,7 @@
 
   function handleDrag(event: DragEvent | MouseEvent) {
     if (!dragging) return
-    console.log(`Drag ${event.clientX}, ${event.clientY}`)
+
     const range = caretRangeFromPoint(event.clientX, event.clientY)
     if (range) {
       const rect = range.getBoundingClientRect()

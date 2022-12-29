@@ -57,6 +57,11 @@ html > body {
     margin-right: var(--border-width)
   }
 
+  &.iaa-zero-width {
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+
   &:not(.iaa-inline-label) {
     border-bottom-style: solid;
   }
@@ -85,6 +90,10 @@ html > body {
         border-top-left-radius: 0.5em;
         border-bottom-left-radius: 0.5em;
         background-color: var(--iaa-border-color);
+      }
+
+      &.iaa-zero-width:before {
+        margin-right: 0px;
       }
     }
 

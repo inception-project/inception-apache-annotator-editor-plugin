@@ -106,7 +106,7 @@ export class ApacheAnnotatorVisualizer {
     if (doc.spans) {
       console.log(`Loaded ${doc.spans.size} span annotations`)
       doc.spans.forEach(span => this.renderSpanAnnotation(doc, span))
-      this.removeZeroWidthHighlights()
+      this.removeSpuriousZeroWidthHighlights()
       if (!this.showEmptyHighlights) {
         this.removeWhitepaceOnlyHighlights()
       }
@@ -174,9 +174,9 @@ export class ApacheAnnotatorVisualizer {
    * The highlighter may create highlighs that are empty (they do not even contain whitespace). This
    * method removes such highlights.
    */
-  private removeZeroWidthHighlights () {
+  private removeSpuriousZeroWidthHighlights () {
     this.getAllHighlights().forEach(e => {
-      if (!e.textContent) {
+      if (!e.classList.contains('iaa-zero-width') && !e.textContent) {
         // Removing the entire highlight element here should be find as it should not contain any
         // relevant DOM nodes, e.g. nodes relevant to text offsets.
         e.remove()
@@ -189,7 +189,7 @@ export class ApacheAnnotatorVisualizer {
    */
   private removeWhitepaceOnlyHighlights () {
     this.getAllHighlights().forEach(e => {
-      if (!e.textContent?.trim()) {
+      if (!e.classList.contains('iaa-zero-width') && !e.textContent?.trim()) {
         // Normally we would want to remove the highlight element, but that would also remove the child
         // nodes (i.e. the whitespace text node) which we want to keep. So we just remove the
         // highlight class from the mark element.
@@ -253,7 +253,9 @@ export class ApacheAnnotatorVisualizer {
   }
 
   private renderSpanAnnotation (doc: AnnotatedText, span: Span) {
-    const range = offsetToRange(this.root, span.offsets[0][0] + doc.window[0], span.offsets[0][1] + doc.window[0])
+    const begin = span.offsets[0][0] + doc.window[0]
+    const end = span.offsets[0][1] + doc.window[0]
+    const range = offsetToRange(this.root, begin, end)
     if (!range) {
       console.debug('Could not render span annotation: ' + span)
       return
@@ -262,6 +264,8 @@ export class ApacheAnnotatorVisualizer {
     const classList = ['iaa-highlighted']
     const ms = doc.annotationMarkers.get(span.vid) || []
     ms.forEach(m => classList.push(`iaa-marker-${m.type}`))
+
+    if (begin === end) classList.push('iaa-zero-width')
 
     const styleList = [
       `--iaa-background-color: ${span.color || '#000000'}${this.alpha}`,
