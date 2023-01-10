@@ -78,7 +78,7 @@ export class ResizeManager {
   }
 
   private handleResizeHandleReleased (e: Event): void {
-    if (!(e instanceof CustomEvent) || !(e.detail?.event instanceof DragEvent) || !this.id) return
+    if (!(e instanceof CustomEvent) || !(e.detail?.event instanceof MouseEvent) || !this.id) return
 
     const position = e.detail.position
     const dragEvent = e.detail.event as DragEvent

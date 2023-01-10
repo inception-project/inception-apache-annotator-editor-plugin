@@ -190,10 +190,8 @@ export class ApacheAnnotatorVisualizer {
   private removeWhitepaceOnlyHighlights () {
     this.getAllHighlights().forEach(e => {
       if (!e.classList.contains('iaa-zero-width') && !e.textContent?.trim()) {
-        // Normally we would want to remove the highlight element, but that would also remove the child
-        // nodes (i.e. the whitespace text node) which we want to keep. So we just remove the
-        // highlight class from the mark element.
-        e.classList.remove('iaa-highlighted')
+        e.after(...e.childNodes)
+        e.remove()
       }
     })
   }
@@ -287,8 +285,26 @@ export class ApacheAnnotatorVisualizer {
     if (!range) return
 
     const removeHighlight = highlightText(range, 'mark', { id: 'iaa-scroll-marker' })
-    this.root.querySelector('#iaa-scroll-marker')?.scrollIntoView(
-      { behavior: 'auto', block: 'center', inline: 'nearest' })
+
+    // The scroll target may be hidden. In this case, we need to find the next visible element.
+    let scrollTarget : Element | null = this.root.querySelector('#iaa-scroll-marker')
+    while (scrollTarget !== null) {
+      const targetStyle = window.getComputedStyle(scrollTarget)
+      if (targetStyle.display === 'none' || targetStyle.visibility === 'hidden') {
+        if (scrollTarget.nextElementSibling) {
+          scrollTarget = scrollTarget.nextElementSibling
+        } else {
+          scrollTarget = scrollTarget.parentElement
+        }
+        continue
+      }
+      break
+    }
+
+    if (scrollTarget) {
+      scrollTarget.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' })
+    }
+
     removeHighlight()
   }
 

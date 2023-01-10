@@ -21,7 +21,7 @@
   import { caretRangeFromPoint } from '@inception-project/inception-js-api'
   import { createEventDispatcher, onMount } from 'svelte'
 
-  export let highlight: HTMLElement
+  export let highlight: HTMLElement = undefined
   export let position: 'begin' | 'end'
   export let handle: HTMLElement
   export let marker: HTMLElement
@@ -80,50 +80,66 @@
     }
   }
 
-  function handleDragStart(event: DragEvent) {
+  function handleDragStart(event: MouseEvent) {
+    event.preventDefault() // Avoid mouse down and dragging causing a text selection
+
     dragging = true
-    event.dataTransfer.effectAllowed = 'move'
     // Unfortunately, Firefox support for drag events is broken and they provide bad clientX/Y
     // coordinates. So we have to use the dragover event instead.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=505521#c95
-    scrollContainer.ownerDocument.addEventListener('dragover', handleDrag, { capture: true })
+    // Also in Safari, clientX/clientY in dragend is broken, so we check mouse movement
+    scrollContainer.addEventListener('mousemove', handleDrag, { capture: true })
+    scrollContainer.addEventListener('mouseup', handleDragEnd, { capture: true })
    }
 
   function handleDrag(event: DragEvent | MouseEvent) {
     if (!dragging) return
 
+    if (event.buttons === 0) {
+      // The mouse button has been released outside of the window
+      cancelDrag()
+      return
+    }
+
     const range = caretRangeFromPoint(event.clientX, event.clientY)
-    if (range) {
-      const rect = range.getBoundingClientRect()
-      const scrollerContainerRect = scrollContainer.getBoundingClientRect()
-      markerX = rect.left + scrollContainer.scrollLeft - scrollerContainerRect.left
-      markerY = rect.top + scrollContainer.scrollTop - scrollerContainerRect.top
-      markerHeight = rect.height
-      markerVisibility = 'visible'
-    }
-    else {
+
+    if (!range) {
       markerVisibility = 'hidden'
+      return
     }
+
+    const rect = range.getBoundingClientRect()
+    const scrollerContainerRect = scrollContainer.getBoundingClientRect()
+    markerX = rect.left + scrollContainer.scrollLeft - scrollerContainerRect.left
+    markerY = rect.top + scrollContainer.scrollTop - scrollerContainerRect.top
+    markerHeight = rect.height
+    markerVisibility = 'visible'
   }
 
-  function handleDragEnd(event: DragEvent) {
+  function handleDragEnd(event: MouseEvent) {
     // Prevent the drag-end from turning into a mouse-up event which would trigger a selection
     // of the annotation
     event.stopPropagation()
     event.preventDefault()
+    const validTarget = markerVisibility === 'visible'
+    cancelDrag()
+    if (!validTarget) return
+    dispatch(`resize-handle-released`, { position, event })
+  }
+
+  function cancelDrag() {
     // See comment in handleDragStart
-    scrollContainer.ownerDocument.removeEventListener('dragover', handleDrag, { capture: true })
+    scrollContainer.removeEventListener('mousemove', handleDrag, { capture: true })
+    scrollContainer.removeEventListener('mouseup', handleDragEnd, { capture: true })
     dragging = false
     markerVisibility = 'hidden'
-    dispatch(`resize-handle-released`, { position, event })
   }
 </script>
 
 <span bind:this={handle} class="handle" role="button"
   style:visibility style:opacity style:--border-width="{borderWidth}px" style:--handle-width="{handleWidth}px"
   style:top="{handleY}px" style:left="{handleX}px" style:height="{handleHeight}px"
-  draggable="true" on:dragstart={handleDragStart} on:dragend={handleDragEnd}
-  on:mouseup={e => e.stopPropagation()}>
+  on:mousedown={handleDragStart}>
   <span class="inner-handle {position}" style:--border-radius="{borderRadius}px" style:--border-width="{borderWidth}px"></span>
 </span>
 <span bind:this={marker} class="marker" style:visibility="{markerVisibility}"
