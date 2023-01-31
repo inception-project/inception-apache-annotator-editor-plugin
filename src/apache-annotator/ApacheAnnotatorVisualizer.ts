@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import './ApacheAnnotatorEditor.scss'
-import { unpackCompactAnnotatedTextV2, DiamAjax, DiamLoadAnnotationsOptions, VID, ViewportTracker, offsetToRange, AnnotatedText, Span, TextMarker } from '@inception-project/inception-js-api'
+import { unpackCompactAnnotatedTextV2, DiamAjax, DiamLoadAnnotationsOptions, VID, ViewportTracker, offsetToRange, AnnotatedText, Span, TextMarker, Offsets } from '@inception-project/inception-js-api'
 import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
 import { highlightText } from '@apache-annotator/dom'
 import { showEmptyHighlights, showLabels } from './ApacheAnnotatorState'
@@ -32,10 +32,12 @@ export class ApacheAnnotatorVisualizer {
   private toCleanUp = new Set<Function>()
   private observer: IntersectionObserver
   private resizer: ResizeManager
-  private tracker : ViewportTracker
+  private tracker: ViewportTracker
   private showInlineLabels = false
   private showEmptyHighlights = false
 
+  private removePingMarkers: (() => void)[] = []
+  private removePingMarkersTimeout: number | undefined = undefined
   private alpha = '55'
 
   constructor (element: Element, ajax: DiamAjax) {
@@ -92,6 +94,8 @@ export class ApacheAnnotatorVisualizer {
       clipSpans: false,
       format: 'compact_v2'
     }
+
+    console.log(`Loading annotations for range ${JSON.stringify(options.range)}`)
 
     this.ajax.loadAnnotations(options)
       .then((doc: CompactAnnotatedText) => this.renderAnnotations(unpackCompactAnnotatedTextV2(doc)))
@@ -231,7 +235,7 @@ export class ApacheAnnotatorVisualizer {
   }
 
   // eslint-disable-next-line no-undef
-  getHighlightsForAnnotation (vid: VID) : NodeListOf<Element> {
+  getHighlightsForAnnotation (vid: VID): NodeListOf<Element> {
     return this.root.querySelectorAll(`[data-iaa-id="${vid}"]`)
   }
 
@@ -280,14 +284,26 @@ export class ApacheAnnotatorVisualizer {
     this.toCleanUp.add(highlightText(range, 'mark', attributes))
   }
 
-  scrollTo (args: { offset: number; position: string; }): void {
+  scrollTo (args: { offset: number, position?: string, pingRanges?: Offsets[] }): void {
     const range = offsetToRange(this.root, args.offset, args.offset)
     if (!range) return
 
-    const removeHighlight = highlightText(range, 'mark', { id: 'iaa-scroll-marker' })
+    window.clearTimeout(2)
+    this.removePingMarkers.forEach(remove => remove())
+
+    const removeScrollMarker = highlightText(range, 'mark', { id: 'iaa-scroll-marker' })
+    this.removePingMarkers = []
+    for (const pingOffset of args.pingRanges || []) {
+      const pingRange = offsetToRange(this.root, pingOffset[0], pingOffset[1])
+      if (!pingRange) continue
+      this.removePingMarkers.push(highlightText(pingRange, 'mark', { class: 'iaa-ping-marker' }))
+    }
+    this.root.querySelectorAll('.iaa-ping-marker').forEach(e => {
+      if (!e.textContent) e.remove()
+    })
 
     // The scroll target may be hidden. In this case, we need to find the next visible element.
-    let scrollTarget : Element | null = this.root.querySelector('#iaa-scroll-marker')
+    let scrollTarget: Element | null = this.root.querySelector('#iaa-scroll-marker')
     while (scrollTarget !== null) {
       const targetStyle = window.getComputedStyle(scrollTarget)
       if (targetStyle.display === 'none' || targetStyle.visibility === 'hidden') {
@@ -305,7 +321,11 @@ export class ApacheAnnotatorVisualizer {
       scrollTarget.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' })
     }
 
-    removeHighlight()
+    removeScrollMarker()
+    this.removePingMarkersTimeout = window.setTimeout(() => {
+      this.removePingMarkers.forEach(remove => remove())
+      console.log('ping removed')
+    }, 2000)
   }
 
   private clearHighlights (): void {

@@ -45,7 +45,11 @@ html > body {
   cursor: pointer;
   background-color: var(--iaa-background-color);
   box-sizing: border-box;
-  border: var(--border-width) none var(--iaa-border-color);
+  border: none var(--iaa-border-color);
+  border-top-width: var(--border-width);
+  border-bottom-width: var(--border-width);
+  border-left-width: 0px;
+  border-right-width: 0px;
 
   &.iaa-first-highlight {
     padding-left: 5px;
@@ -70,6 +74,9 @@ html > body {
     border-style: solid;
   
     &.iaa-first-highlight {
+      border-top-left-radius: 0.5em;
+      border-bottom-left-radius: 0.5em;
+      border-left-width: var(--border-width);
       padding-left: 0px;
 
       &:before {
@@ -96,12 +103,6 @@ html > body {
         margin-right: 0px;
       }
     }
-
-    &.iaa-first-highlight {
-      border-top-left-radius: 0.5em;
-      border-bottom-left-radius: 0.5em;
-      border-left-width: var(--border-width);
-    }
   
     &.iaa-last-highlight {
       border-top-right-radius: 0.5em;
@@ -111,15 +112,35 @@ html > body {
   }
 }
 
+@keyframes iaa-ping-fade-animation {
+	0% {
+		background: rgba(255, 165, 0, 0);
+	}
+
+  50% {
+		background: rgba(255, 165, 0, 1);
+	}
+
+	100% {
+		background: rgba(255, 165, 0, 0);
+	}
+}
+.iaa-ping-marker {
+  background: rgba(255, 165, 0, 0);
+  animation: iaa-ping-fade-animation 0.3s ease-in-out .2s 3 normal forwards;
+}
+
 /**
  * Highlighting of the currently selected annotation.
  */
  .iaa-marker-focus {
   border-color: var(--i7n-focus-color) !important;
-  border-width: calc(2 * var(--border-width)) !important;
+  border-top-width: calc(2 * var(--border-width)) !important;
+  border-bottom-width: calc(2 * var(--border-width)) !important;
 
   &.iaa-inline-label {
     &.iaa-first-highlight {
+      border-left-width: calc(2 * var(--border-width));
       margin-left: 0px;
 
       &:before {
@@ -128,7 +149,9 @@ html > body {
         border-bottom-left-radius: 0.3em;
       }
     }
+
     &.iaa-last-highlight {
+      border-right-width: calc(2 * var(--border-width));
       margin-right: 0px;
     }
   }

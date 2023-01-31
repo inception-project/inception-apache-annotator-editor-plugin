@@ -1,29 +1,29 @@
 name: Apache Annotator Editor Content Policies
 version: 0.1
-case_sensitive: false
+case_sensitive: true
 debug: true
 policies:
   # TEI
   - {
       elements:
         [
-          "head",
-          "body",
-          "div",
-          "tei",
-          "text",
-          "pb",
-          "l",
-          "lg",
-          "p",
-          "sp",
-          "speaker",
-          "note",
-          "stage",
-          "castList",
-          "castItem",
-          "role",
-          "roleDesc"
+          "{http://www.tei-c.org/ns/1.0}head",
+          "{http://www.tei-c.org/ns/1.0}body",
+          "{http://www.tei-c.org/ns/1.0}div",
+          "{http://www.tei-c.org/ns/1.0}TEI",
+          "{http://www.tei-c.org/ns/1.0}text",
+          "{http://www.tei-c.org/ns/1.0}pb",
+          "{http://www.tei-c.org/ns/1.0}l",
+          "{http://www.tei-c.org/ns/1.0}lg",
+          "{http://www.tei-c.org/ns/1.0}p",
+          "{http://www.tei-c.org/ns/1.0}sp",
+          "{http://www.tei-c.org/ns/1.0}speaker",
+          "{http://www.tei-c.org/ns/1.0}note",
+          "{http://www.tei-c.org/ns/1.0}stage",
+          "{http://www.tei-c.org/ns/1.0}castList",
+          "{http://www.tei-c.org/ns/1.0}castItem",
+          "{http://www.tei-c.org/ns/1.0}role",
+          "{http://www.tei-c.org/ns/1.0}roleDesc"
         ],
       action: "PASS",
     }
