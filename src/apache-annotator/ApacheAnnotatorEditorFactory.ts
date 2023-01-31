@@ -50,7 +50,7 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
       // Add a (scrolling) wrapper around the target element
       const wrapper = element.ownerDocument.createElement('div')
       wrapper.classList.add('iaa-wrapper')
-      body.childNodes.forEach((child) => wrapper.appendChild(child))
+      Array.from(body.childNodes).forEach((child) => wrapper.appendChild(child))
       body.appendChild(wrapper)
       wrapper.style.overflow = 'auto'
       targetElement = wrapper
