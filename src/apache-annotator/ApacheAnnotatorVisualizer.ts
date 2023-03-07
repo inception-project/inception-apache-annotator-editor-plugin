@@ -137,8 +137,21 @@ export class ApacheAnnotatorVisualizer {
     if (selectedAnnotationVids.length === 0) return
 
     const highlights = Array.from(this.root.querySelectorAll('.iaa-marker-focus'))
-    const top = Math.min(...highlights.map(e => e.getBoundingClientRect().top))
-    const bottom = Math.max(...highlights.map(e => e.getBoundingClientRect().bottom))
+    let top : number | undefined
+    let bottom : number | undefined
+    highlights.forEach(hl => {
+      const r = hl.getBoundingClientRect()
+      // Is the highlighted element actually visible or is it "display: none"
+      if (r.width !== 0 && r.height !== 0) {
+        top = top === undefined ? r.top : Math.min(top, r.top)
+        bottom = bottom === undefined ? r.bottom : Math.max(bottom, r.bottom)
+      }
+    })
+
+    if (top === undefined || bottom === undefined) {
+      console.warn('Cannot determine top/bottom for vertical selection marker')
+      return
+    }
 
     const scrollerContainerRect = this.root.getBoundingClientRect()
 
