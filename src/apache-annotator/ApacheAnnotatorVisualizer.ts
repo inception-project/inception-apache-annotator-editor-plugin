@@ -301,7 +301,7 @@ export class ApacheAnnotatorVisualizer {
     const range = offsetToRange(this.root, args.offset, args.offset)
     if (!range) return
 
-    window.clearTimeout(2)
+    window.clearTimeout(this.removePingMarkersTimeout)
     this.removePingMarkers.forEach(remove => remove())
 
     const removeScrollMarker = highlightText(range, 'mark', { id: 'iaa-scroll-marker' })
