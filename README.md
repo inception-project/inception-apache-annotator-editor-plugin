@@ -13,8 +13,9 @@ Clone this repository as a sub-folder under the `editors` folder.
 tl;dr: 
 
 ```
-$ cd /srv/inception
+$ cd ~/.inception
 $ mkdir editors
+$ cd editors
 $ git clone https://github.com/inception-project/inception-apache-annotator-editor-plugin.git
 ```
 
