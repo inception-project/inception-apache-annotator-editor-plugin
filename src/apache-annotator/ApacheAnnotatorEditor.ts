@@ -19,6 +19,7 @@ import { AnnotationEditor, DiamAjax, calculateStartOffset } from '@inception-pro
 import { highlights, ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer'
 import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector'
 import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte'
+import { showEmptyHighlights, showLabels } from './ApacheAnnotatorState'
 
 export class ApacheAnnotatorEditor implements AnnotationEditor {
   private ajax: DiamAjax
@@ -27,9 +28,41 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   private selector: ApacheAnnotatorSelector
   private toolbar: ApacheAnnotatorToolbar
 
-  public constructor (element: Element, ajax: DiamAjax) {
+  public constructor (element: Element, ajax: DiamAjax, userPreferencesKey: string) {
     this.ajax = ajax
     this.root = element
+
+    const defaultPreferences = {
+      showLabels: false,
+      showEmptyHighlights: false
+    }
+    let preferences = Object.assign({}, defaultPreferences)
+
+    ajax.loadPreferences(userPreferencesKey).then((p) => {
+      preferences = Object.assign(preferences, defaultPreferences, p)
+      console.log('Loaded preferences', preferences)
+      showLabels.set(
+        preferences.showLabels !== undefined
+          ? preferences.showLabels
+          : defaultPreferences.showLabels
+      )
+
+      showEmptyHighlights.set(
+        preferences.showEmptyHighlights !== undefined
+          ? preferences.showEmptyHighlights
+          : defaultPreferences.showEmptyHighlights
+      )
+
+      showLabels.subscribe((mode) => {
+        preferences.showLabels = mode
+        ajax.savePreferences(userPreferencesKey, preferences)
+      })
+
+      showEmptyHighlights.subscribe((mode) => {
+        preferences.showEmptyHighlights = mode
+        ajax.savePreferences(userPreferencesKey, preferences)
+      })
+    })
 
     this.vis = new ApacheAnnotatorVisualizer(this.root, this.ajax)
     this.selector = new ApacheAnnotatorSelector(this.root, this.ajax)
