@@ -137,12 +137,14 @@ export class ApacheAnnotatorVisualizer {
     if (selectedAnnotationVids.length === 0) return
 
     const highlights = Array.from(this.root.querySelectorAll('.iaa-marker-focus'))
-    let top : number | undefined
-    let bottom : number | undefined
+    if (highlights.length === 0) return
+
+    let top: number | undefined
+    let bottom: number | undefined
     highlights.forEach(hl => {
       const r = hl.getBoundingClientRect()
       // Is the highlighted element actually visible or is it "display: none"
-      if (r.width !== 0 && r.height !== 0) {
+      if ((hl.classList.contains('iaa-zero-width') && r.height !== 0) || (r.width !== 0 && r.height !== 0)) {
         top = top === undefined ? r.top : Math.min(top, r.top)
         bottom = bottom === undefined ? r.bottom : Math.max(bottom, r.bottom)
       }
@@ -270,11 +272,6 @@ export class ApacheAnnotatorVisualizer {
   private renderSpanAnnotation (doc: AnnotatedText, span: Span) {
     const begin = span.offsets[0][0] + doc.window[0]
     const end = span.offsets[0][1] + doc.window[0]
-    const range = offsetToRange(this.root, begin, end)
-    if (!range) {
-      console.debug('Could not render span annotation: ' + span)
-      return
-    }
 
     const classList = ['iaa-highlighted']
     const ms = doc.annotationMarkers.get(span.vid) || []
@@ -294,6 +291,46 @@ export class ApacheAnnotatorVisualizer {
       style: styleList.join('; ')
     }
 
+    const viewportBegin = this.tracker.currentRange[0]
+    const viewportEnd = this.tracker.currentRange[1]
+
+    if (viewportBegin <= begin && end <= viewportEnd) {
+      // Quick and easy if the annotation fits entirely into the visible viewport
+      const startTime = new Date().getTime()
+      this.renderHighlight(span, begin, end, attributes)
+      const endTime = new Date().getTime()
+      console.debug(`Rendering span with size ${end - begin} took ${Math.abs(endTime - startTime)}ms`)
+    } else {
+      // Try optimizing for long spans to improve rendering performance
+      let fragmentCount = 0
+      const startTime = new Date().getTime()
+
+      const coreBegin = Math.max(begin, viewportBegin)
+      const coreEnd = Math.min(end, viewportEnd)
+      this.renderHighlight(span, coreBegin, coreEnd, attributes)
+      fragmentCount++
+
+      attributes.class += ' iaa-zero-width' // Prevent prefix/suffix fragmens from being cleaned up
+      if (!(viewportBegin <= begin && begin <= viewportEnd)) {
+        this.renderHighlight(span, begin, begin, attributes)
+        fragmentCount++
+      }
+
+      if (!(viewportBegin <= end && end <= viewportEnd)) {
+        this.renderHighlight(span, end, end, attributes)
+        fragmentCount++
+      }
+      const endTime = new Date().getTime()
+      console.debug(`Rendering span with size ${end - begin} took ${Math.abs(endTime - startTime)}ms (${fragmentCount} fragments)`)
+    }
+  }
+
+  renderHighlight (span: Span, begin: number, end: number, attributes: {}): void {
+    const range = offsetToRange(this.root, begin, end)
+    if (!range) {
+      console.debug(`Could not determine fragment range for (${begin},${end}) of annotation ${span}`)
+      return
+    }
     this.toCleanUp.add(highlightText(range, 'mark', attributes))
   }
 
