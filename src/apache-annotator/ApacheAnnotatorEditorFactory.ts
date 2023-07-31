@@ -62,7 +62,7 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
       body.style.width = '100vw'
     }
 
-    element[PROP_EDITOR] = new ApacheAnnotatorEditor(targetElement, ajax, `annotation/${props.editorFactoryId}`)
+    element[PROP_EDITOR] = new ApacheAnnotatorEditor(targetElement, ajax, props.userPreferencesKey)
     return element[PROP_EDITOR]
   }
 

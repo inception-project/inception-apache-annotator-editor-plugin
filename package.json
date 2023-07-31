@@ -8,8 +8,8 @@
   "dependencies": {
     "@inception-project/inception-js-api": "*",
     "apache-annotator": "^0.2.0",
-    "bootstrap": "^5.2.3",
-    "@popperjs/core": "^2.11.4"
+    "bootstrap": "^5.3.1",
+    "@popperjs/core": "^2.11.7"
   },
   "devDependencies": {
     "esbuild": "^0.16.10",
