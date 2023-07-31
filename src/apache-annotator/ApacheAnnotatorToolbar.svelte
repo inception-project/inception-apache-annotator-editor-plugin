@@ -25,10 +25,10 @@
       <input class="form-check-input" type="checkbox" role="switch" id="inlineLabelsEnabled" bind:checked={$showLabels}>
       <label class="form-check-label" for="inlineLabelsEnabled">Labels</label>
     </div>
-    <div class="form-check form-switch mx-2">
+    <!-- <div class="form-check form-switch mx-2">
       <input class="form-check-input" type="checkbox" role="switch" id="showEmptyHighlights" bind:checked={$showEmptyHighlights}>
       <label class="form-check-label" for="showEmptyHighlights">Empties</label>
-    </div>
+    </div> -->
   </div>
 </div>
 
